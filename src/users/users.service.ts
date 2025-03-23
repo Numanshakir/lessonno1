@@ -1,75 +1,33 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dti';
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class UsersService {
-  private users = [
-    {
-      userId: '1',
-      username: 'john',
-      password: 'changeme',
-      role: 'admin',
-    },
-    {
-      userId: '2',
-      username: 'maria',
-      password: 'guess',
-      role: 'intern',
-    },
-    {
-      userId: '3',
-      username: 'Numan',
-      password: 'guess',
-      role: 'intern',
-    },
-  ];
+  constructor(private readonly databaseService: DatabaseService) {}
 
-  getAllUsers(role?: 'admin | intern'): any[] {
-    if (role) {
-      const data = this.users.filter((user) => user.role === role);
-      if (data.length === 0) {
-        throw new NotFoundException('User not found');
-      }
-      return data;
-    } else {
-      if (this.users.length === 0) {
-        throw new NotFoundException('User not found');
-      }
-      return this.users;
-    }
-  }
-  getUserById(id: string) {
-    const user = this.users.find((value) => value.userId === id);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    return user;
+  async create(createUserDto: Prisma.UserCreateInput) {
+    return this.databaseService.user.create({
+      data: createUserDto,
+    });
   }
 
-  createUser(user: CreateUserDto) {
-    const newUser = {
-      userId: '5',
-      ...user,
-    };
-    this.users.push(newUser);
-  }
-  updateUser(
-    userId: string,
-
-    newUser: UpdateUserDto,
-  ) {
-    this.users = this.users.map((user) =>
-      user.userId === userId ? { ...user, ...newUser } : user,
-    );
-    return this.getUserById(userId);
+  findAll() {
+    return this.databaseService.user.findMany();
   }
 
-  deleteUser(usrId: string) {
-    const deleteUser = this.getUserById(usrId);
+  findOne(id: number) {
+    return this.databaseService.user.findUnique({ where: { id } });
+  }
 
-    this.users = this.users.filter((user) => user.userId !== usrId);
+  update(id: number, updateUserDto: Prisma.UserUpdateInput) {
+    return this.databaseService.user.update({
+      where: { id },
+      data: updateUserDto,
+    });
+  }
 
-    return deleteUser;
+  remove(id: number) {
+    return this.databaseService.user.delete({ where: { id } });
   }
 }
